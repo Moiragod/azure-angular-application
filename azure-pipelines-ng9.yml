@@ -1,0 +1,44 @@
+trigger:
+  branches:
+    include:
+    - master
+    
+resources:
+- repo: self
+
+pool:
+  vmImage: 'Ubuntu 18.04'
+
+variables:
+  buildConfiguration: 'Release'
+  ngBuildConfiguration: '--prod'
+
+steps:
+
+- task: Npm@1
+  displayName: 'npm install'
+  inputs:
+    command: install
+    workingDirectory: $(Agent.BuildDirectory)
+
+- task: Npm@1
+  displayName: 'Build Angular'
+  inputs:
+    command: custom
+    customCommand: run build -- $(ngBuildConfiguration)
+    workingDirectory: $(Agent.BuildDirectory)
+
+- task: PublishPipelineArtifact@0
+  inputs:
+    artifactName: angular8PipelineArtifactProd
+    targetPath: '$(Agent.BuildDirectory)/dist'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Agent.BuildDirectory)/dist'
+    ArtifactName: angular8BuildArtifactProd
+
+- task: DeleteFiles@1
+  displayName: 'Delete Build files'
+  inputs:
+    Contents: '$(Agent.BuildDirectory)/dist'
